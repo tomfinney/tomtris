@@ -12,17 +12,23 @@ document.body.appendChild(base)
 
 base.innerText = "--------\n-----"
 
-function Renderer(e: HTMLPreElement) {
-  this.element = e
-  this.rows = []
+type Row = (string | null)[]
 
-  this.getLiveRows = () => {
-    let rows = this.element.innerText.split("\n")
-    rows = rows.map((string) => string.split(""))
+class Renderer {
+  element: HTMLPreElement
+  rows: string[][] = []
+
+  constructor(e: HTMLPreElement) {
+    this.element = e
+  }
+
+  getLiveRows = () => {
+    const stringRows = this.element.innerText.split("\n")
+    const rows = stringRows.map((string) => string.split(""))
     this.rows = rows
   }
 
-  this.findRow = (index: number) => {
+  findRow = (index: number) => {
     const rows = this.rows
 
     if (index > rows.length - 1) {
@@ -40,7 +46,7 @@ function Renderer(e: HTMLPreElement) {
     return row
   }
 
-  this.renderRow = (newRow: (string | null)[], index: number) => {
+  renderRow = (newRow: Row, index: number, offset?: number) => {
     this.getLiveRows()
 
     const row = this.findRow(index)
@@ -51,17 +57,28 @@ function Renderer(e: HTMLPreElement) {
 
     newRow.forEach((char, i) => {
       if (char !== null) {
-        row[i] = char
+        row[i + (offset || 0)] = char
       }
     })
 
     const rowsAsString = this.rows.map((row) => row.join("")).join("\n")
     this.element.innerText = rowsAsString
   }
+
+  renderRows = (renderRowArgsList: Parameters<typeof this.renderRow>[]) => {
+    renderRowArgsList.forEach((args) => {
+      this.renderRow(...args)
+    })
+  }
 }
 
 const renderer = new Renderer(base)
 
-renderer.renderRow("aaaaa".split(""), 3)
-renderer.renderRow("bbbbbbbbbbbbbbb".split(""), 4)
-renderer.renderRow([null, "!"], 4)
+// renderer.renderRow("aaaaa".split(""), 3)
+
+renderer.renderRows([
+  ["aaaaa".split(""), 3],
+  ["bbbbbbbbbbbbbbb".split(""), 4],
+  [[null, "!"], 4],
+  [[null, "!"], 0, 1],
+])
